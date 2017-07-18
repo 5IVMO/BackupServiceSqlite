@@ -21,9 +21,9 @@ public class ReminderService extends Service {
 
     Context mContext;
     String TAG = "service";
-    String dbName, storagePath, Schedule;
-    long noOfDays;
-    inputParams params;
+    String dbName, storagePath, Schedule,packageName,Password;
+    int noOfExpiryDays;
+    Params params;
     String CurrentTime, CurrentDate;
     int Day, Month, Year, Hour, Minute;
     private AppPreferences appPrefs;
@@ -47,13 +47,23 @@ public class ReminderService extends Service {
         dbName = params.getDbName();
         Schedule = params.getSchedule();
         storagePath = params.getStoragePath();
-        noOfDays = params.getNoOfDays();
+        noOfExpiryDays = params.getNoOfExpiryDays();
+        packageName=params.getPackageName();
+        Password=params.getPassword();
 
-        Log.d("params in service", dbName);
-        Log.d("params in service", Schedule);
-        Log.d("params in service", storagePath);
-        Log.d("params in service", "" + noOfDays);
-        GetCurrentDateTime();
+        Log.d("DB Name", dbName);
+        Log.d("Schedule", Schedule);
+        Log.d("Storage path", storagePath);
+        Log.d("Expiry days", "" + noOfExpiryDays);
+        Log.d("Package Name", packageName);
+        Log.d("Password", Password);
+
+
+       /* LocalDate dateAfter = LocalDate.now();
+        LocalDate dateBefore = dateAfter.plusDays(1);
+        int daysBetween = Days.daysBetween(dateAfter, dateBefore).getDays();*/
+
+       // GetCurrentDateTime();
         takeBackup();
         return START_REDELIVER_INTENT;
     }
@@ -65,8 +75,15 @@ public class ReminderService extends Service {
     }
 
     public void takeBackup() {
-
-        notifyUser();
+       // boolean response = new BackupnRestore().takeEncryptedBackup(packageName, dbName, storagePath, Password);
+        boolean response = new BackupnRestore().takeBackup(mContext,packageName, dbName, storagePath);
+        if (response) {
+            Log.d("Response","Success");
+            notifyUser();
+        }
+        else {
+            Log.d("Response","Error");
+        }
         stopSelf();
     }
 

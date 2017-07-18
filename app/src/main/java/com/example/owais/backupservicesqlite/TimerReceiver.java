@@ -3,7 +3,6 @@ package com.example.owais.backupservicesqlite;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.util.Log;
 
 /**
@@ -23,17 +22,7 @@ public class TimerReceiver extends BroadcastReceiver {
 
         if (!(userID.equals(""))) {
             Intent intentService = new Intent(context, ReminderService.class);
-
-            inputParams params = new inputParams();
-            params.setDbName("DB Name");
-            params.setStoragePath("Path");
-            params.setSchedule("Schedule");
-            params.setNoOfDays(1);
-
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("params", params);
-            intentService.putExtras(bundle);
-
+            intentService.putExtras(intent.getExtras());
             context.startService(intentService);
         }
     }
