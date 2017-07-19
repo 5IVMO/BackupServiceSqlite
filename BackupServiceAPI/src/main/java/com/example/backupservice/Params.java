@@ -1,4 +1,4 @@
-package com.example.owais.backupservicesqlite;
+package com.example.backupservice;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -8,23 +8,29 @@ import android.os.Parcelable;
  */
 
 public class Params implements Parcelable {
+    public enum Schedule {
+        DAILY, WEEKLY, MONTHLY
+    }
+
     private String dbName;
     private String storagePath;
-    private String schedule;
+    private Schedule schedule;
     private String packageName;
     private String Password;
     private int noOfExpiryDays;
+    private boolean keepMonthlyBackup;
 
-    public Params(){}
+    public Params() {
+    }
 
-    public Params(String dbName, String storagePath, String schedule, String packageName, String password, int noOfExpiryDays) {
+    public Params(String dbName, String storagePath, Schedule schedule, String packageName, String password, int noOfExpiryDays, boolean keepMonthlyBackup) {
         this.dbName = dbName;
         this.storagePath = storagePath;
         this.schedule = schedule;
         this.packageName = packageName;
-        this.Password = password;
-
+        Password = password;
         this.noOfExpiryDays = noOfExpiryDays;
+        this.keepMonthlyBackup = keepMonthlyBackup;
     }
 
     public String getDbName() {
@@ -43,11 +49,11 @@ public class Params implements Parcelable {
         this.storagePath = storagePath;
     }
 
-    public String getSchedule() {
+    public Schedule getSchedule() {
         return schedule;
     }
 
-    public void setSchedule(String schedule) {
+    public void setSchedule(Schedule schedule) {
         this.schedule = schedule;
     }
 
@@ -75,6 +81,14 @@ public class Params implements Parcelable {
         this.packageName = packageName;
     }
 
+    public boolean isKeepMonthlyBackup() {
+        return keepMonthlyBackup;
+    }
+
+    public void setKeepMonthlyBackup(boolean keepMonthlyBackup) {
+        this.keepMonthlyBackup = keepMonthlyBackup;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -84,19 +98,21 @@ public class Params implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.dbName);
         dest.writeString(this.storagePath);
-        dest.writeString(this.schedule);
+        dest.writeString(this.schedule.name());
         dest.writeString(this.packageName);
         dest.writeString(this.Password);
         dest.writeInt(this.noOfExpiryDays);
+        dest.writeInt(this.keepMonthlyBackup ? 1 : 0);
     }
 
     protected Params(Parcel in) {
         this.dbName = in.readString();
         this.storagePath = in.readString();
-        this.schedule = in.readString();
+        this.schedule = Schedule.valueOf(in.readString());
         this.packageName = in.readString();
         this.Password = in.readString();
         this.noOfExpiryDays = in.readInt();
+        this.keepMonthlyBackup= (in.readInt() == 0) ? false : true;
     }
 
     public static final Parcelable.Creator<Params> CREATOR = new Parcelable.Creator<Params>() {

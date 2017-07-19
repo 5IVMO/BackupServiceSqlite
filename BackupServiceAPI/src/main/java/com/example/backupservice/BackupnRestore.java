@@ -1,4 +1,4 @@
-package com.example.owais.backupservicesqlite;
+package com.example.backupservice;
 
 import android.content.Context;
 import android.os.Environment;
@@ -19,10 +19,12 @@ public class BackupnRestore {
 
 		    if (sd.canWrite()) {
 		      //  String currentDBPath = "//data//"+packageName+"//databases//"+dbName;
+                // File currentDB = new File(data, currentDBPath);
+
                 String currentDBPath =context.getDatabasePath(dbName).getPath();
+				File currentDB = new File(currentDBPath);
+
 		        String backupDBPath = destinationPath+"//"+dbName;
-                  File currentDB = new File(currentDBPath);
-		       // File currentDB = new File(data, currentDBPath);
 		        File backupDB = new File(sd, backupDBPath);
 		        if (!backupDB.exists()) {
 		        	backupDB.createNewFile();
@@ -47,16 +49,19 @@ public class BackupnRestore {
 		return false;
 	}
 	
-	public boolean takeEncryptedBackup(String packageName, String dbName, String destinationPath, String password) {
+	public boolean takeEncryptedBackup(Context context,String packageName, String dbName, String destinationPath, String password) {
 		try {
 	
 				File sd = Environment.getExternalStorageDirectory();
 				File data = Environment.getDataDirectory();
 			
 				if (sd.canWrite()) {
-				    String currentDBPath = "//data//"+packageName+"//databases//"+dbName;
+				   // String currentDBPath = "//data//"+packageName+"//databases//"+dbName;
+                   // File currentDB = new File(data, currentDBPath);
+                    String currentDBPath =context.getDatabasePath(dbName).getPath();
+                    File currentDB = new File(currentDBPath);
+
 				    String backupDBPath = destinationPath+"//"+dbName;
-				    File currentDB = new File(data, currentDBPath);
 				    File backupDB = new File(sd, backupDBPath);
 				    if (!backupDB.exists()) {
 				    	backupDB.createNewFile();
@@ -65,8 +70,8 @@ public class BackupnRestore {
 				        Zipper zipper = new Zipper();
 				        File backupDBZIp = new File(sd, backupDBPath+".zip");
 				        zipper.pack(currentDB, password, backupDBZIp);
+                        return true;
 				    }
-				    return true;
 				}
 		    
 		} catch (Exception e) {
