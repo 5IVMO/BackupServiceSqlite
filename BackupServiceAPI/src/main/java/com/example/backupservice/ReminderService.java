@@ -23,8 +23,8 @@ public class ReminderService extends Service {
 
     Context mContext;
     String TAG = "service";
-    String dbName, storagePath, packageName, Password;
-    Boolean keepMonthlyBackup;
+    String appName,dbName, storagePath, packageName, Password;
+    Boolean keepMonthlyBackup, encryptDB;
     Params.Schedule Schedule;
     int noOfExpiryDays;
     Params params;
@@ -47,12 +47,6 @@ public class ReminderService extends Service {
         mContext = this.getApplicationContext();
 
         extractBundle(intent);
-
-     /*   LocalDate dateAfter = LocalDate.now();
-        LocalDate dateBefore = dateAfter.plusDays(1);
-        int daysBetween = Days.daysBetween(dateAfter, dateBefore).getDays();*/
-
-        // GetCurrentDateTime();
         takeBackup();
         expireBackup();
         stopSelf();
@@ -71,9 +65,21 @@ public class ReminderService extends Service {
         }
     }
 
+    private boolean endOfMonth(LocalDate date) {
+        LocalDate lastDayOfMonth = LocalDate.fromDateFields(new
+                Date()).dayOfMonth().withMaximumValue();
+        int daysBetween = Days.daysBetween(date, lastDayOfMonth).getDays();
+        if (daysBetween == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private void extractBundle(Intent intent) {
         Bundle bundle = intent.getExtras();
         params = bundle.getParcelable("params");
+        appName=params.getAppName();
         dbName = params.getDbName();
         Schedule = params.getSchedule();
         storagePath = params.getStoragePath();
@@ -81,6 +87,7 @@ public class ReminderService extends Service {
         packageName = params.getPackageName();
         Password = params.getPassword();
         keepMonthlyBackup = params.isKeepMonthlyBackup();
+        encryptDB = params.isEncryptDB();
 
         Log.d("DB Name", dbName);
         Log.d("Schedule", "" + Schedule);
@@ -88,7 +95,8 @@ public class ReminderService extends Service {
         Log.d("Expiry days", "" + noOfExpiryDays);
         Log.d("Package Name", packageName);
         Log.d("Password", Password);
-        Log.d("Monthly Baackup", "" + keepMonthlyBackup);
+        Log.d("Monthly Backup", "" + keepMonthlyBackup);
+        Log.d("Encrypt DB", "" + encryptDB);
     }
 
     @Override
@@ -98,6 +106,23 @@ public class ReminderService extends Service {
     }
 
     private void expireBackup() {
+        boolean responseExpire = false;
+        boolean responseBackup = false;
+        LocalDate today = LocalDate.now();
+        LocalDate expiryDate = today.minusDays(noOfExpiryDays);
+        if (keepMonthlyBackup) {
+            if (!endOfMonth(expiryDate)) {
+                responseExpire = new BackupnRestore().expire(expiryDate);
+            }
+        } else {
+            responseExpire = new BackupnRestore().expire(expiryDate);
+        }
+        if (Schedule == Params.Schedule.WEEKLY || Schedule == Params.Schedule.MONTHLY) {
+            responseBackup = new BackupnRestore().takeEncryptedBackup(mContext,appName, packageName, dbName, storagePath, Password);
+        }
+        if (responseBackup) {
+            notifyUser();
+        }
 
     }
 
@@ -105,19 +130,31 @@ public class ReminderService extends Service {
         boolean response = false;
         if (keepMonthlyBackup) {
             if (endOfMonth()) {
-                response = new BackupnRestore().takeEncryptedBackup(mContext, packageName, dbName, storagePath, Password);
+                response = new BackupnRestore().takeEncryptedBackup(mContext, appName,packageName, dbName, storagePath, Password);
             }
         }
         if (Schedule == Params.Schedule.DAILY) {
-            response = new BackupnRestore().takeEncryptedBackup(mContext, packageName, dbName, storagePath, Password);
+            if (encryptDB && !Password.equals("")) {
+                response = new BackupnRestore().takeEncryptedBackup(mContext, appName,packageName, dbName, storagePath, Password);
+            } else {
+                response = new BackupnRestore().takeBackup(mContext, appName,packageName, dbName, storagePath);
+            }
         } else if (Schedule == Params.Schedule.WEEKLY) {
             LocalDate today = LocalDate.now();
             if (today.getDayOfWeek() == 7) {
-                response = new BackupnRestore().takeEncryptedBackup(mContext, packageName, dbName, storagePath, Password);
+                if (encryptDB && !Password.equals("")) {
+                    response = new BackupnRestore().takeEncryptedBackup(mContext, appName,packageName, dbName, storagePath, Password);
+                } else {
+                    response = new BackupnRestore().takeBackup(mContext, appName,packageName, dbName, storagePath);
+                }
             }
         } else if (Schedule == Params.Schedule.MONTHLY) {
             if (endOfMonth()) {
-                response = new BackupnRestore().takeEncryptedBackup(mContext, packageName, dbName, storagePath, Password);
+                if (encryptDB && !Password.equals("")) {
+                    response = new BackupnRestore().takeEncryptedBackup(mContext,appName, packageName, dbName, storagePath, Password);
+                } else {
+                    response = new BackupnRestore().takeBackup(mContext,appName, packageName, dbName, storagePath);
+                }
             }
         }
         if (response) {
