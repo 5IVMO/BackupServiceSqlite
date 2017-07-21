@@ -23,7 +23,7 @@ public class ReminderService extends Service {
 
     Context mContext;
     String TAG = "service";
-    String appName,dbName, storagePath, packageName, Password;
+    String appName, dbName, storagePath, packageName, Password;
     Boolean keepMonthlyBackup, encryptDB;
     Params.Schedule Schedule;
     int noOfExpiryDays;
@@ -79,7 +79,7 @@ public class ReminderService extends Service {
     private void extractBundle(Intent intent) {
         Bundle bundle = intent.getExtras();
         params = bundle.getParcelable("params");
-        appName=params.getAppName();
+        appName = params.getAppName();
         dbName = params.getDbName();
         Schedule = params.getSchedule();
         storagePath = params.getStoragePath();
@@ -88,15 +88,6 @@ public class ReminderService extends Service {
         Password = params.getPassword();
         keepMonthlyBackup = params.isKeepMonthlyBackup();
         encryptDB = params.isEncryptDB();
-
-        Log.d("DB Name", dbName);
-        Log.d("Schedule", "" + Schedule);
-        Log.d("Storage path", storagePath);
-        Log.d("Expiry days", "" + noOfExpiryDays);
-        Log.d("Package Name", packageName);
-        Log.d("Password", Password);
-        Log.d("Monthly Backup", "" + keepMonthlyBackup);
-        Log.d("Encrypt DB", "" + encryptDB);
     }
 
     @Override
@@ -112,48 +103,51 @@ public class ReminderService extends Service {
         LocalDate expiryDate = today.minusDays(noOfExpiryDays);
         if (keepMonthlyBackup) {
             if (!endOfMonth(expiryDate)) {
-                responseExpire = new BackupnRestore().expire(expiryDate);
+                responseExpire = new BackupAndRestore().expire(expiryDate,dbName,storagePath);
             }
         } else {
-            responseExpire = new BackupnRestore().expire(expiryDate);
+            responseExpire = new BackupAndRestore().expire(expiryDate,dbName,storagePath);
         }
-        if (Schedule == Params.Schedule.WEEKLY || Schedule == Params.Schedule.MONTHLY) {
-            responseBackup = new BackupnRestore().takeEncryptedBackup(mContext,appName, packageName, dbName, storagePath, Password);
+        if(responseExpire){
+            Log.d("Response Expire", "Success");
+            if (Schedule == Params.Schedule.WEEKLY || Schedule == Params.Schedule.MONTHLY) {
+                responseBackup = new BackupAndRestore().takeEncryptedBackup(mContext, appName, packageName, dbName, storagePath, Password);
+            }
         }
         if (responseBackup) {
+            Log.d("Response Backup", "Success");
             notifyUser();
         }
-
     }
 
     public void takeBackup() {
         boolean response = false;
         if (keepMonthlyBackup) {
             if (endOfMonth()) {
-                response = new BackupnRestore().takeEncryptedBackup(mContext, appName,packageName, dbName, storagePath, Password);
+                response = new BackupAndRestore().takeEncryptedBackup(mContext, appName, packageName, dbName, storagePath, Password);
             }
         }
         if (Schedule == Params.Schedule.DAILY) {
             if (encryptDB && !Password.equals("")) {
-                response = new BackupnRestore().takeEncryptedBackup(mContext, appName,packageName, dbName, storagePath, Password);
+                response = new BackupAndRestore().takeEncryptedBackup(mContext, appName, packageName, dbName, storagePath, Password);
             } else {
-                response = new BackupnRestore().takeBackup(mContext, appName,packageName, dbName, storagePath);
+                response = new BackupAndRestore().takeBackup(mContext, appName, packageName, dbName, storagePath);
             }
         } else if (Schedule == Params.Schedule.WEEKLY) {
             LocalDate today = LocalDate.now();
             if (today.getDayOfWeek() == 7) {
                 if (encryptDB && !Password.equals("")) {
-                    response = new BackupnRestore().takeEncryptedBackup(mContext, appName,packageName, dbName, storagePath, Password);
+                    response = new BackupAndRestore().takeEncryptedBackup(mContext, appName, packageName, dbName, storagePath, Password);
                 } else {
-                    response = new BackupnRestore().takeBackup(mContext, appName,packageName, dbName, storagePath);
+                    response = new BackupAndRestore().takeBackup(mContext, appName, packageName, dbName, storagePath);
                 }
             }
         } else if (Schedule == Params.Schedule.MONTHLY) {
             if (endOfMonth()) {
                 if (encryptDB && !Password.equals("")) {
-                    response = new BackupnRestore().takeEncryptedBackup(mContext,appName, packageName, dbName, storagePath, Password);
+                    response = new BackupAndRestore().takeEncryptedBackup(mContext, appName, packageName, dbName, storagePath, Password);
                 } else {
-                    response = new BackupnRestore().takeBackup(mContext,appName, packageName, dbName, storagePath);
+                    response = new BackupAndRestore().takeBackup(mContext, appName, packageName, dbName, storagePath);
                 }
             }
         }
