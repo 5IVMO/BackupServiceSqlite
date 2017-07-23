@@ -67,7 +67,7 @@ public class BackupService {
                                         new BackupAndRestore().restore(FilePath, DBPath);
                                     } else if (finalExtension.equals(".zip")) {
                                         Toast.makeText(context, ".zip file", Toast.LENGTH_SHORT).show();
-                                        new BackupAndRestore().decryptBackup(FilePath, DBPath);
+                                        new BackupAndRestore().decryptBackup(context,FilePath, DBPath);
                                     }
 
                                 } catch (Exception e) {
