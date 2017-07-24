@@ -64,7 +64,7 @@ public class BackupAndRestore {
                 String currentDBPath = context.getDatabasePath(dbName).getPath();
                 File currentDB = new File(currentDBPath);
 
-                String backupDBPath = destinationPath + "//" + dbName + "-" + today + ".db";
+                String backupDBPath = destinationPath + "//" + dbName + "-" + today;
                 File backupDB = new File(sd, backupDBPath);
                 if (!backupDB.exists()) {
                     backupDB.createNewFile();
@@ -126,8 +126,8 @@ public class BackupAndRestore {
             if (sd.canWrite()) {
                 String currentDBPath = DBPath;
                 String backupDBPath = FilePath;
-                File currentDB = new File(data, currentDBPath);
-                File backupDB = new File(sd, backupDBPath);
+                File currentDB = new File(currentDBPath);
+                File backupDB = new File(backupDBPath);
                 if (!currentDB.exists()) {
                     currentDB.createNewFile();
                 }
@@ -162,7 +162,7 @@ public class BackupAndRestore {
         mInput.close();*/
     }
 
-    public boolean decryptBackup(Context context,String FilePath, String DBPath){
+    public boolean decryptBackup(Context context,String FilePath, String DBPath,String Password){
         try {
 
             File sd = Environment.getExternalStorageDirectory();
@@ -174,7 +174,7 @@ public class BackupAndRestore {
                 File currentDB = new File(currentDBPath);
 
                 String backupDBPath = FilePath;
-                File backupDB = new File(sd, backupDBPath);
+                File backupDB = new File(backupDBPath);
                 if (!currentDB.exists()) {
                     currentDB.createNewFile();
                 }

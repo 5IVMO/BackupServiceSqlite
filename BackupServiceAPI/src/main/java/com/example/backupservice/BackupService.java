@@ -35,11 +35,13 @@ public class BackupService {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intentService, PendingIntent.FLAG_CANCEL_CURRENT);
         Calendar calendar = Calendar.getInstance();
 
-        calendar.set(Calendar.HOUR_OF_DAY, 11); // For 1 PM or 2 PM
-        calendar.set(Calendar.MINUTE, 35);
+        calendar.set(Calendar.HOUR_OF_DAY, 3); // For 1 PM or 2 PM
+        calendar.set(Calendar.MINUTE, 39);
         calendar.set(Calendar.SECOND, 0);
         final AlarmManager alarmManager = (AlarmManager) (context.getSystemService(Context.ALARM_SERVICE));
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+        //alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 10 * 1000, 55 * 1000, pendingIntent);
+
     }
 
     public void importDB(final String FilePath, final String DBPath) {
@@ -61,13 +63,20 @@ public class BackupService {
                         "Yes",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
+                                boolean response=false;
                                 try {
                                     if (finalExtension.equals(".db")) {
                                         Toast.makeText(context, ".db file", Toast.LENGTH_SHORT).show();
-                                        new BackupAndRestore().restore(FilePath, DBPath);
+                                        response=new BackupAndRestore().restore(FilePath, DBPath);
+                                        if(response){
+                                            Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
+                                        }
                                     } else if (finalExtension.equals(".zip")) {
                                         Toast.makeText(context, ".zip file", Toast.LENGTH_SHORT).show();
-                                        new BackupAndRestore().decryptBackup(context,FilePath, DBPath);
+                                       response=new BackupAndRestore().decryptBackup(context, FilePath, DBPath,"123");
+                                        if(response){
+                                            Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
+                                        }
                                     }
 
                                 } catch (Exception e) {

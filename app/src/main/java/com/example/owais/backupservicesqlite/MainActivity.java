@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
-        generateData();
+     //   generateData();
 
         checkBox_encrypt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,8 +136,8 @@ public class MainActivity extends AppCompatActivity {
     private void generateData() {
         DAL dal = new DAL(this);
         DataBean dataBean = new DataBean();
-        dataBean.setCity("Karachi");//get value from edit text
-        dataBean.setProvince("Sindh"); //get value from spinner.
+        dataBean.setCity("Lahore");//get value from edit text
+        dataBean.setProvince("Punjab"); //get value from spinner.
         long id = dal.insertCountry(dataBean);
 
 
