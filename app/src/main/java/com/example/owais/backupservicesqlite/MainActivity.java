@@ -14,8 +14,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.backupservice.AppPreferences;
-import com.example.backupservice.BackupService;
+import com.example.backupservice.Backup;
 import com.example.backupservice.Params;
 import com.example.owais.backupservicesqlite.DB.DAL;
 import com.example.owais.backupservicesqlite.DB.DBConnect;
@@ -24,7 +23,6 @@ import com.example.owais.backupservicesqlite.DB.DataBean;
 public class MainActivity extends AppCompatActivity {
 
     private static final int PICKFILE_RESULT_CODE = 1;
-    private AppPreferences appPrefs;
     RadioGroup radioGroup;
     RadioButton radioButton;
     CheckBox checkbox_monthly, checkBox_encrypt;
@@ -39,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
-     //   generateData();
+       // generateData();
 
         checkBox_encrypt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,10 +69,8 @@ public class MainActivity extends AppCompatActivity {
                         int expiryDays = Integer.parseInt(expiry);
 
                         Params params = new Params();
-                        params.setAppName("Sample Application");
                         params.setDbName("Practice");
                         params.setStoragePath("//DCIM");
-                        params.setPackageName("com.example.hii.sqlitedb");
                         params.setNoOfExpiryDays(expiryDays);
 
                         if (radioButtonText.equals("Daily")) {
@@ -96,8 +92,8 @@ public class MainActivity extends AppCompatActivity {
                             params.setEncryptDB(false);
                             params.setPassword("");
                         }
-                        BackupService backupService = new BackupService(MainActivity.this);
-                        backupService.setupAlarm(params);
+                        Backup backup = new Backup(MainActivity.this);
+                        backup.setupService(params);
                     }
                 } else {
                     Toast.makeText(MainActivity.this, "Please enter expiry days!", Toast.LENGTH_LONG).show();
@@ -156,9 +152,8 @@ public class MainActivity extends AppCompatActivity {
                 if (resultCode == RESULT_OK) {
                     //FilePath is your file as a string
                     final String FilePath = data.getData().getPath();
-                    final String DBPath = getDatabasePath(DBConnect.DB_NAME).getPath();
-                    BackupService backupService = new BackupService(MainActivity.this);
-                    backupService.importDB(FilePath, DBPath);
+                    Backup backup = new Backup(MainActivity.this);
+                    backup.importDB(FilePath,DBConnect.DB_NAME);
                 }
         }
     }

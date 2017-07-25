@@ -12,11 +12,9 @@ public class Params implements Parcelable {
         DAILY, WEEKLY, MONTHLY
     }
 
-    private String appName;
     private String dbName;
     private String storagePath;
     private Schedule schedule;
-    private String packageName;
     private String Password;
     private int noOfExpiryDays;
     private boolean keepMonthlyBackup,encryptDB;
@@ -24,24 +22,14 @@ public class Params implements Parcelable {
     public Params() {
     }
 
-    public Params(String appName, String dbName, String storagePath, Schedule schedule, String packageName, String password, int noOfExpiryDays, boolean keepMonthlyBackup, boolean encryptDB) {
-        this.appName = appName;
+    public Params(String dbName, String storagePath, Schedule schedule, String password, int noOfExpiryDays, boolean keepMonthlyBackup, boolean encryptDB) {
         this.dbName = dbName;
         this.storagePath = storagePath;
         this.schedule = schedule;
-        this.packageName = packageName;
         Password = password;
         this.noOfExpiryDays = noOfExpiryDays;
         this.keepMonthlyBackup = keepMonthlyBackup;
         this.encryptDB = encryptDB;
-    }
-
-    public String getAppName() {
-        return appName;
-    }
-
-    public void setAppName(String appName) {
-        this.appName = appName;
     }
 
     public String getDbName() {
@@ -84,14 +72,6 @@ public class Params implements Parcelable {
         this.Password = password;
     }
 
-    public String getPackageName() {
-        return packageName;
-    }
-
-    public void setPackageName(String packageName) {
-        this.packageName = packageName;
-    }
-
     public boolean isKeepMonthlyBackup() {
         return keepMonthlyBackup;
     }
@@ -115,11 +95,9 @@ public class Params implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.appName);
         dest.writeString(this.dbName);
         dest.writeString(this.storagePath);
         dest.writeString(this.schedule.name());
-        dest.writeString(this.packageName);
         dest.writeString(this.Password);
         dest.writeInt(this.noOfExpiryDays);
         dest.writeInt(this.keepMonthlyBackup ? 1 : 0);
@@ -127,11 +105,9 @@ public class Params implements Parcelable {
     }
 
     protected Params(Parcel in) {
-        this.appName=in.readString();
         this.dbName = in.readString();
         this.storagePath = in.readString();
         this.schedule = Schedule.valueOf(in.readString());
-        this.packageName = in.readString();
         this.Password = in.readString();
         this.noOfExpiryDays = in.readInt();
         this.keepMonthlyBackup= (in.readInt() == 0) ? false : true;

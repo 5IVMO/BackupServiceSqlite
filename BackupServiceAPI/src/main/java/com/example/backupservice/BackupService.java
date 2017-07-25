@@ -1,107 +1,125 @@
 package com.example.backupservice;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+import android.app.Service;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
-import android.text.TextUtils;
-import android.util.Log;
-import android.widget.Toast;
+import android.os.IBinder;
 
-import java.util.Calendar;
+import org.joda.time.LocalDate;
+
+import static com.example.backupservice.Util.endOfMonth;
+import static com.example.backupservice.Util.notifyUser;
 
 /**
- * Created by Owais on 7/19/2017.
+ * Created by owais on 7/14/2017.
  */
+public class BackupService extends Service {
 
-public class BackupService {
+    Context mContext;
+    String dbName,storagePath,Password;
+    Boolean keepMonthlyBackup, encryptDB;
+    Params.Schedule Schedule;
+    int noOfExpiryDays;
+    Params params;
 
-    private Context context;
-
-    public BackupService(Context context) {
-        this.context = context;
+    public BackupService() {
     }
 
-    public void setupAlarm(Params params) {
-        Intent intentService = new Intent(context, TimerReceiver.class);
-
-        Bundle bundle = new Bundle();
-        bundle.putParcelable("params", params);
-        intentService.putExtras(bundle);
-
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intentService, PendingIntent.FLAG_CANCEL_CURRENT);
-        Calendar calendar = Calendar.getInstance();
-
-        calendar.set(Calendar.HOUR_OF_DAY, 3); // For 1 PM or 2 PM
-        calendar.set(Calendar.MINUTE, 39);
-        calendar.set(Calendar.SECOND, 0);
-        final AlarmManager alarmManager = (AlarmManager) (context.getSystemService(Context.ALARM_SERVICE));
-         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
-        //alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 10 * 1000, 55 * 1000, pendingIntent);
-
+    @Override
+    public void onCreate() {
+        super.onCreate();
     }
 
-    public void importDB(final String FilePath, final String DBPath) {
-        String extension = "";
-        if (FilePath.contains(".")) {
-            extension = FilePath.substring(FilePath.lastIndexOf("."));
-        }
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        mContext = this.getApplicationContext();
+        extractBundle(intent);
+        takeBackup();
+        expireBackup();
+        stopSelf();
+        return START_REDELIVER_INTENT;
+    }
 
-        if (!TextUtils.isEmpty(extension)) {
+    private void extractBundle(Intent intent) {
+        Bundle bundle = intent.getExtras();
+        params = bundle.getParcelable("params");
+        dbName = params.getDbName();
+        Schedule = params.getSchedule();
+        storagePath = params.getStoragePath();
+        noOfExpiryDays = params.getNoOfExpiryDays();
+        Password = params.getPassword();
+        keepMonthlyBackup = params.isKeepMonthlyBackup();
+        encryptDB = params.isEncryptDB();
+    }
 
-            if (extension.equals(".db") || extension.equals(".zip")) {
-                AlertDialog.Builder builder1 = new AlertDialog.Builder(context);
-                builder1.setTitle("Remove Old Database");
-                builder1.setMessage("Are you Sure You want to remove old Database ?");
-                builder1.setCancelable(true);
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        return null;
+    }
 
-                final String finalExtension = extension;
-                builder1.setPositiveButton(
-                        "Yes",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                boolean response=false;
-                                try {
-                                    if (finalExtension.equals(".db")) {
-                                        Toast.makeText(context, ".db file", Toast.LENGTH_SHORT).show();
-                                        response=new BackupAndRestore().restore(FilePath, DBPath);
-                                        if(response){
-                                            Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
-                                        }
-                                    } else if (finalExtension.equals(".zip")) {
-                                        Toast.makeText(context, ".zip file", Toast.LENGTH_SHORT).show();
-                                       response=new BackupAndRestore().decryptBackup(context, FilePath, DBPath,"123");
-                                        if(response){
-                                            Toast.makeText(context, "Success", Toast.LENGTH_LONG).show();
-                                        }
-                                    }
-
-                                } catch (Exception e) {
-                                    Log.d("", e.toString());
-                                }
-                                dialog.cancel();
-                            }
-                        });
-
-                builder1.setNegativeButton(
-                        "No",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                dialog.cancel();
-                            }
-                        });
-
-                AlertDialog alert11 = builder1.create();
-                alert11.show();
-            } else {
-                Toast.makeText(context, "Please select .db or .Zip file", Toast.LENGTH_LONG).show();
+    private void expireBackup() {
+        boolean responseExpire = false;
+        boolean responseBackup = false;
+        LocalDate today = LocalDate.now();
+        LocalDate expiryDate = today.minusDays(noOfExpiryDays);
+        if (keepMonthlyBackup) {
+            if (!endOfMonth(expiryDate)) {
+                responseExpire = new BackupAndRestore().expire(expiryDate, dbName, storagePath);
             }
-
         } else {
-            Toast.makeText(context, "Please select .db or .Zip file", Toast.LENGTH_LONG).show();
+            responseExpire = new BackupAndRestore().expire(expiryDate, dbName, storagePath);
         }
+        if (responseExpire) {
+            if (Schedule == Params.Schedule.WEEKLY || Schedule == Params.Schedule.MONTHLY) {
+                responseBackup = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
+                if (responseBackup) {
+                    notifyUser(mContext);
+                }
+            }
+        }
+    }
+
+    public void takeBackup() {
+        boolean response = false;
+        if (keepMonthlyBackup) {
+            if (endOfMonth()) {
+                response = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
+            }
+        }
+        if (Schedule == Params.Schedule.DAILY) {
+            if (encryptDB && !Password.equals("")) {
+                response = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
+            } else {
+                response = new BackupAndRestore().takeBackup(mContext, dbName, storagePath);
+            }
+        } else if (Schedule == Params.Schedule.WEEKLY) {
+            LocalDate today = LocalDate.now();
+            if (today.getDayOfWeek() == 7) { //7 represent sunday
+                if (encryptDB && !Password.equals("")) {
+                    response = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
+                } else {
+                    response = new BackupAndRestore().takeBackup(mContext, dbName, storagePath);
+                }
+            }
+        } else if (Schedule == Params.Schedule.MONTHLY) {
+            if (endOfMonth()) {
+                if (encryptDB && !Password.equals("")) {
+                    response = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
+                } else {
+                    response = new BackupAndRestore().takeBackup(mContext, dbName, storagePath);
+                }
+            }
+        }
+        if (response) {
+            notifyUser(mContext);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
     }
 }
