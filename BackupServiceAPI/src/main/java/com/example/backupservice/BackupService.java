@@ -17,7 +17,7 @@ import static com.example.backupservice.Util.notifyUser;
 public class BackupService extends Service {
 
     Context mContext;
-    String dbName,storagePath,Password;
+    String dbName, storagePath, Password;
     Boolean keepMonthlyBackup, encryptDB;
     Params.Schedule Schedule;
     int noOfExpiryDays;
@@ -83,12 +83,13 @@ public class BackupService extends Service {
 
     public void takeBackup() {
         boolean response = false;
-        if (keepMonthlyBackup) {
-            if (endOfMonth()) {
+        if (keepMonthlyBackup && endOfMonth()) {
+            if (encryptDB && !Password.equals("")) {
                 response = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
+            } else {
+                response = new BackupAndRestore().takeBackup(mContext, dbName, storagePath);
             }
-        }
-        if (Schedule == Params.Schedule.DAILY) {
+        } else if (Schedule == Params.Schedule.DAILY) {
             if (encryptDB && !Password.equals("")) {
                 response = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
             } else {
@@ -96,20 +97,18 @@ public class BackupService extends Service {
             }
         } else if (Schedule == Params.Schedule.WEEKLY) {
             LocalDate today = LocalDate.now();
-            if (today.getDayOfWeek() == 7) { //7 represent sunday
+            if (today.getDayOfWeek() == 1) { //7 represent sunday
                 if (encryptDB && !Password.equals("")) {
                     response = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
                 } else {
                     response = new BackupAndRestore().takeBackup(mContext, dbName, storagePath);
                 }
             }
-        } else if (Schedule == Params.Schedule.MONTHLY) {
-            if (endOfMonth()) {
-                if (encryptDB && !Password.equals("")) {
-                    response = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
-                } else {
-                    response = new BackupAndRestore().takeBackup(mContext, dbName, storagePath);
-                }
+        } else if (Schedule == Params.Schedule.MONTHLY && endOfMonth()) {
+            if (encryptDB && !Password.equals("")) {
+                response = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
+            } else {
+                response = new BackupAndRestore().takeBackup(mContext, dbName, storagePath);
             }
         }
         if (response) {

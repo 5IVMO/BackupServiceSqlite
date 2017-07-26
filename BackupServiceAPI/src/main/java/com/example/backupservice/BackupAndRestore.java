@@ -3,6 +3,7 @@ package com.example.backupservice;
 import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.joda.time.LocalDate;
 
@@ -10,6 +11,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
+
+import static com.example.backupservice.Util.parseException;
 
 public class BackupAndRestore {
 
@@ -58,12 +61,15 @@ public class BackupAndRestore {
                 if (backupDB.exists()) {
                     Zipper zipper = new Zipper();
                     File backupDBZIp = new File(sd, backupDBPath + ".zip");
-                    zipper.pack(backupDB, password, backupDBZIp);
+                    boolean responseZip = zipper.pack(backupDB, password, backupDBZIp);
+                    if (responseZip) {
+                        backupDB.delete();
+                    }
                     return true;
                 }
             }
         } catch (Exception e) {
-            Log.d("Exception", e.getMessage());
+            Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
         }
         return false;
     }
@@ -100,7 +106,7 @@ public class BackupAndRestore {
         return false;
     }
 
-    public boolean decryptBackup(String FilePath, String DBPath, String Password) {
+    public boolean decryptBackup(Context context, String FilePath, String DBPath, String Password) {
         try {
 
             File sd = Environment.getExternalStorageDirectory();
@@ -118,6 +124,7 @@ public class BackupAndRestore {
                     boolean responseUnpack = zipper.unpack(backupDBPath, extractedFilePath, Password);
                     if (responseUnpack && extractedDB.exists()) {
                         boolean response = restore(extractedFile, DBPath);
+                        extractedDB.delete();
                         if (response) {
                             return true;
                         }
@@ -125,7 +132,7 @@ public class BackupAndRestore {
                 }
             }
         } catch (Exception e) {
-            Log.d("Exception", e.getMessage());
+            parseException(context, e);
         }
         return false;
     }

@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
+import android.text.Html;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
@@ -32,8 +33,11 @@ public class Backup {
     }
 
     public void setupDialog() {
+
         dialogPassword = new Dialog(context);
+        dialogPassword.getWindow().setBackgroundDrawableResource(R.drawable.dialog_box);
         dialogPassword.setContentView(R.layout.dialog_password);
+        dialogPassword.setTitle(Html.fromHtml("<font color='#FFFFFF'>Password Required</font>"));
         enterPassword = (Button) dialogPassword.findViewById(R.id.button_password);
         cancelPassword = (Button) dialogPassword.findViewById(R.id.button_cancel);
         editTextPassword = (EditText) dialogPassword.findViewById(R.id.editText_password);
@@ -50,8 +54,8 @@ public class Backup {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intentService, PendingIntent.FLAG_CANCEL_CURRENT);
         Calendar calendar = Calendar.getInstance();
 
-        calendar.set(Calendar.HOUR_OF_DAY, 4); // For 1 PM or 2 PM
-        calendar.set(Calendar.MINUTE, 36);
+        calendar.set(Calendar.HOUR_OF_DAY, 12); // For 1 PM or 2 PM
+        calendar.set(Calendar.MINUTE, 26);
         calendar.set(Calendar.SECOND, 0);
         final AlarmManager alarmManager = (AlarmManager) (context.getSystemService(Context.ALARM_SERVICE));
         alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
@@ -91,7 +95,7 @@ public class Backup {
                                             public void onClick(View v) {
                                                 String password = editTextPassword.getText().toString();
                                                 if (!password.equals("")) {
-                                                    boolean responseDecrypt = new BackupAndRestore().decryptBackup(FilePath, DBPath, password);
+                                                    boolean responseDecrypt = new BackupAndRestore().decryptBackup(context,FilePath, DBPath, password);
                                                     if (responseDecrypt) {
                                                         Toast.makeText(context, "Successfully Restore Database", Toast.LENGTH_LONG).show();
                                                     }

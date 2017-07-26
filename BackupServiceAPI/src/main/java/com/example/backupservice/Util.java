@@ -9,7 +9,6 @@ import android.widget.Toast;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 
-import java.util.Calendar;
 import java.util.Date;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
@@ -19,8 +18,6 @@ import static android.content.Context.NOTIFICATION_SERVICE;
  */
 
 public class Util {
-    String CurrentTime, CurrentDate;
-    int Day, Month, Year, Hour, Minute;
 
     public static boolean endOfMonth() {
         LocalDate today = LocalDate.now();
@@ -35,9 +32,8 @@ public class Util {
     }
 
     public static boolean endOfMonth(LocalDate date) {
-        LocalDate lastDayOfMonth = LocalDate.fromDateFields(new
-                Date()).dayOfMonth().withMaximumValue();
-        int daysBetween = Days.daysBetween(date, lastDayOfMonth).getDays();
+        LocalDate endOfMonth = date.dayOfMonth().withMaximumValue();
+        int daysBetween = Days.daysBetween(date, endOfMonth).getDays();
         if (daysBetween == 0) {
             return true;
         } else {
@@ -56,45 +52,14 @@ public class Util {
         notificationManager.notify(count, mBuilder.build());
     }
 
-    public void GetCurrentDateTime() {
-        //Get Current Date
-        Calendar calendar = Calendar.getInstance();
-        Day = calendar.get(calendar.DAY_OF_MONTH); //26
-        Month = calendar.get(calendar.MONTH); //0
-        Year = calendar.get(calendar.YEAR);//2016
-
-        CurrentDate = Month + 1 + "/" + Day + "/" + Year;
-
-        //Get Current Time
-        Hour = calendar.get(calendar.HOUR_OF_DAY);//14
-        Minute = calendar.get(calendar.MINUTE);//39
-
-        String state = " ";
-        String min = " ";
-        if (Hour > 12) {
-            Hour -= 12;
-            state = "PM";
-        } else if (Hour == 0) {
-            Hour += 12;
-            state = "AM";
-        } else if (Hour == 12)
-            state = "PM";
-        else
-            state = "AM";
-
-        if (Minute < 10)
-            min = "0" + Minute;
-        else
-            min = String.valueOf(Minute);
-
-        CurrentTime = Hour + ":" + min + " " + state;
-    }
-
-    public static void ToastShort(Context context, String msg) {
-        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-    }
-
-    public static void ToastLong(Context context, String msg) {
-        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+    public static void parseException(Context context, Exception e) {
+        try {
+            String exception = e.getMessage().toString();
+            String exceptionMessage = exception.substring(exception.indexOf(":", exception.indexOf(":") + 1) + 1);
+            Toast.makeText(context, exceptionMessage, Toast.LENGTH_LONG).show();
+        }
+        catch (Exception e1){
+            Toast.makeText(context, e1.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 }

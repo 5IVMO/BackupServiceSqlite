@@ -141,6 +141,17 @@ public class MainActivity extends AppCompatActivity {
         dataBean1.setCity("Peshawar");//get value from edit text
         dataBean1.setProvince("KPK"); //get value from spinner.
         long id1 = dal.insertCountry(dataBean1);
+
+        DataBean dataBean2 = new DataBean();
+        dataBean2.setCity("Karachi");//get value from edit text
+        dataBean2.setProvince("Sindh"); //get value from spinner.
+        long id2 = dal.insertCountry(dataBean2);
+
+
+        DataBean dataBean3 = new DataBean();
+        dataBean3.setCity("Quetta");//get value from edit text
+        dataBean3.setProvince("Balochistan"); //get value from spinner.
+        long id3 = dal.insertCountry(dataBean3);
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
