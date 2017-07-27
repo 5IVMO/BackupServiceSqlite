@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.text.Html;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,12 +25,14 @@ import java.util.Calendar;
 public class Backup {
 
     private Context context;
+    private AppPreferences appPrefs;
     Dialog dialogPassword;
     Button cancelPassword, enterPassword;
     EditText editTextPassword;
 
     public Backup(Context context) {
         this.context = context;
+        appPrefs = new AppPreferences(context);
     }
 
     public void setupDialog() {
@@ -45,21 +48,28 @@ public class Backup {
     }
 
     public void setupService(Params params) {
-        Intent intentService = new Intent(context, TimerReceiver.class);
+        if (params != null) {
+            appPrefs.saveParams(params);
 
-        Bundle bundle = new Bundle();
-        bundle.putParcelable("params", params);
-        intentService.putExtras(bundle);
+            Intent intentService = new Intent(context, AlarmReceiver.class);
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intentService, PendingIntent.FLAG_CANCEL_CURRENT);
-        Calendar calendar = Calendar.getInstance();
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("params", params);
+            intentService.putExtras(bundle);
 
-        calendar.set(Calendar.HOUR_OF_DAY, 12); // For 1 PM or 2 PM
-        calendar.set(Calendar.MINUTE, 26);
-        calendar.set(Calendar.SECOND, 0);
-        final AlarmManager alarmManager = (AlarmManager) (context.getSystemService(Context.ALARM_SERVICE));
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
-        //alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 10 * 1000, 55 * 1000, pendingIntent);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intentService, PendingIntent.FLAG_CANCEL_CURRENT);
+            Calendar calendar = Calendar.getInstance();
+
+            calendar.set(Calendar.HOUR_OF_DAY, 12); // For 1 PM or 2 PM
+            calendar.set(Calendar.MINUTE, 26);
+            calendar.set(Calendar.SECOND, 0);
+            final AlarmManager alarmManager = (AlarmManager) (context.getSystemService(Context.ALARM_SERVICE));
+              alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
+            //alarmManager.setRepeating(AlarmManager.RTC, System.currentTimeMillis() + 10 * 1000, 55 * 1000, pendingIntent);
+        }
+        else {
+            Log.d("Params","Params Should not be null");
+        }
     }
 
     public void importDB(final String FilePath, final String dbName) {
@@ -95,7 +105,7 @@ public class Backup {
                                             public void onClick(View v) {
                                                 String password = editTextPassword.getText().toString();
                                                 if (!password.equals("")) {
-                                                    boolean responseDecrypt = new BackupAndRestore().decryptBackup(context,FilePath, DBPath, password);
+                                                    boolean responseDecrypt = new BackupAndRestore().decryptBackup(context, FilePath, DBPath, password);
                                                     if (responseDecrypt) {
                                                         Toast.makeText(context, "Successfully Restore Database", Toast.LENGTH_LONG).show();
                                                     }

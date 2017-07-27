@@ -20,7 +20,7 @@ import com.example.owais.backupservicesqlite.DB.DAL;
 import com.example.owais.backupservicesqlite.DB.DBConnect;
 import com.example.owais.backupservicesqlite.DB.DataBean;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final int PICKFILE_RESULT_CODE = 1;
     RadioGroup radioGroup;
@@ -37,84 +37,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
-       // generateData();
+        // generateData();
 
-        checkBox_encrypt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (checkBox_encrypt.isChecked()) {
-                    textViewPassword.setVisibility(View.VISIBLE);
-                    editTextPassWord.setVisibility(View.VISIBLE);
-                    requiredPassword = true;
-                } else {
-                    textViewPassword.setVisibility(View.INVISIBLE);
-                    editTextPassWord.setVisibility(View.INVISIBLE);
-                    requiredPassword = false;
-                }
-            }
-        });
-        buttonExport.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String Password = editTextPassWord.getText().toString();
-                String expiry = editTextExpiryDays.getText().toString();
-
-                if (!(expiry.equals(""))) {
-                    if (requiredPassword && Password.equals("")) {
-                        Toast.makeText(MainActivity.this, "Please enter Password!", Toast.LENGTH_LONG).show();
-                    } else {
-                        int selectedId = radioGroup.getCheckedRadioButtonId();
-                        radioButton = (RadioButton) findViewById(selectedId);
-                        String radioButtonText = (String) radioButton.getText();
-                        int expiryDays = Integer.parseInt(expiry);
-
-                        Params params = new Params();
-                        params.setDbName("Practice");
-                        params.setStoragePath("//DCIM");
-                        params.setNoOfExpiryDays(expiryDays);
-
-                        if (radioButtonText.equals("Daily")) {
-                            params.setSchedule(Params.Schedule.DAILY);
-                        } else if (radioButtonText.equals("Weekly")) {
-                            params.setSchedule(Params.Schedule.WEEKLY);
-                        } else if (radioButtonText.equals("Monthly")) {
-                            params.setSchedule(Params.Schedule.MONTHLY);
-                        }
-                        if (checkbox_monthly.isChecked()) {
-                            params.setKeepMonthlyBackup(true);
-                        } else {
-                            params.setKeepMonthlyBackup(false);
-                        }
-                        if (checkBox_encrypt.isChecked()) {
-                            params.setEncryptDB(true);
-                            params.setPassword(Password);
-                        } else {
-                            params.setEncryptDB(false);
-                            params.setPassword("");
-                        }
-                        Backup backup = new Backup(MainActivity.this);
-                        backup.setupService(params);
-                    }
-                } else {
-                    Toast.makeText(MainActivity.this, "Please enter expiry days!", Toast.LENGTH_LONG).show();
-                }
-
-            }
-        });
-
-        buttonImport.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                intent.setType("file/*");
-                try {
-                    startActivityForResult(intent, PICKFILE_RESULT_CODE);
-                } catch (ActivityNotFoundException e) {
-                    Log.d(TAG, e.toString());
-                }
-            }
-        });
+        checkBox_encrypt.setOnClickListener(this);
+        buttonExport.setOnClickListener(this);
+        buttonImport.setOnClickListener(this);
 
     }
 
@@ -164,8 +91,81 @@ public class MainActivity extends AppCompatActivity {
                     //FilePath is your file as a string
                     final String FilePath = data.getData().getPath();
                     Backup backup = new Backup(MainActivity.this);
-                    backup.importDB(FilePath,DBConnect.DB_NAME);
+                    backup.importDB(FilePath, DBConnect.DB_NAME);
                 }
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+
+            case R.id.mybutton_import:
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.setType("file/*");
+                try {
+                    startActivityForResult(intent, PICKFILE_RESULT_CODE);
+                } catch (ActivityNotFoundException e) {
+                    Log.d(TAG, e.toString());
+                }
+                break;
+
+            case R.id.mybutton_export:
+                String Password = editTextPassWord.getText().toString();
+                String expiry = editTextExpiryDays.getText().toString();
+
+                if (!(expiry.equals(""))) {
+                    if (requiredPassword && Password.equals("")) {
+                        Toast.makeText(MainActivity.this, "Please enter Password!", Toast.LENGTH_LONG).show();
+                    } else {
+                        int selectedId = radioGroup.getCheckedRadioButtonId();
+                        radioButton = (RadioButton) findViewById(selectedId);
+                        String radioButtonText = (String) radioButton.getText();
+                        int expiryDays = Integer.parseInt(expiry);
+
+                        Params params = new Params();
+                        params.setDbName("Practice");
+                        params.setStoragePath("//DCIM");
+                        params.setNoOfExpiryDays(expiryDays);
+
+                        if (radioButtonText.equals("Daily")) {
+                            params.setSchedule(Params.Schedule.DAILY);
+                        } else if (radioButtonText.equals("Weekly")) {
+                            params.setSchedule(Params.Schedule.WEEKLY);
+                        } else if (radioButtonText.equals("Monthly")) {
+                            params.setSchedule(Params.Schedule.MONTHLY);
+                        }
+                        if (checkbox_monthly.isChecked()) {
+                            params.setKeepMonthlyBackup(true);
+                        } else {
+                            params.setKeepMonthlyBackup(false);
+                        }
+                        if (checkBox_encrypt.isChecked()) {
+                            params.setEncryptDB(true);
+                            params.setPassword(Password);
+                        } else {
+                            params.setEncryptDB(false);
+                            params.setPassword("");
+                        }
+                        Backup backup = new Backup(MainActivity.this);
+                        backup.setupService(params);
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "Please enter expiry days!", Toast.LENGTH_LONG).show();
+                }
+                break;
+            case R.id.checkBox_encrypt:
+                if (checkBox_encrypt.isChecked()) {
+                    textViewPassword.setVisibility(View.VISIBLE);
+                    editTextPassWord.setVisibility(View.VISIBLE);
+                    requiredPassword = true;
+                } else {
+                    textViewPassword.setVisibility(View.INVISIBLE);
+                    editTextPassWord.setVisibility(View.INVISIBLE);
+                    requiredPassword = false;
+                }
+                break;
         }
     }
 }

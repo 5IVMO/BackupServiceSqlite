@@ -17,6 +17,7 @@ import static com.example.backupservice.Util.notifyUser;
 public class BackupService extends Service {
 
     Context mContext;
+    public static final int MONDAY = 1;
     String dbName, storagePath, Password;
     Boolean keepMonthlyBackup, encryptDB;
     Params.Schedule Schedule;
@@ -97,7 +98,7 @@ public class BackupService extends Service {
             }
         } else if (Schedule == Params.Schedule.WEEKLY) {
             LocalDate today = LocalDate.now();
-            if (today.getDayOfWeek() == 1) { //7 represent sunday
+            if (today.getDayOfWeek() == MONDAY) {
                 if (encryptDB && !Password.equals("")) {
                     response = new BackupAndRestore().takeEncryptedBackup(mContext, dbName, storagePath, Password);
                 } else {

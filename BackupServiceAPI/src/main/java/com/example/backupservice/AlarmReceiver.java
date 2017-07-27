@@ -7,7 +7,7 @@ import android.content.Intent;
 /**
  * Created by owais on 7/14/2017.
  */
-public class TimerReceiver extends BroadcastReceiver {
+public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
